@@ -1,8 +1,0 @@
-discord.py[voice]
-PyNaCl
-davey
-yt-dlp
-ffmpeg-downloader
-flask
-gunicorn
-psutil
