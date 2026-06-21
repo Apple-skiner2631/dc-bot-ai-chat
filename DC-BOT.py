@@ -1,3 +1,4 @@
+
 import os
 import threading
 from flask import Flask
@@ -10,7 +11,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Gemini AI Free Bot is running!"
+    return "Gemini Bot is running!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
@@ -28,7 +29,7 @@ ai_model = genai.GenerativeModel('gemini-2.5-flash')
 
 @bot.event
 async def on_ready():
-    print(f"Ai機器人已上線: {bot.user.name}")
+    print(f"Gemini 機器人已上線: {bot.user.name}")
 
 @bot.event
 async def on_message(message):
@@ -49,12 +50,33 @@ async def on_message(message):
 
         if not has_role: return
 
+        is_mentioned = bot.user in message.mentions
+        
+        is_reply_to_bot = False
+        if message.reference and message.reference.message_id:
+            try:
+                referenced_msg = await message.channel.fetch_message(message.reference.message_id)
+                if referenced_msg.author == bot.user:
+                    is_reply_to_bot = True
+            except:
+                pass
+
+        if not (is_mentioned or is_reply_to_bot): return
+
         try:
             async with message.channel.typing():
                 contents = []
                 
-                if message.content:
-                    contents.append(message.content)
+                clean_content = message.content
+                if bot.user.mention in clean_content:
+                    clean_content = clean_content.replace(bot.user.mention, "").strip()
+                elif f"<@!{bot.user.id}>" in clean_content:
+                    clean_content = clean_content.replace(f"<@!{bot.user.id}>", "").strip()
+                elif f"<@{bot.user.id}>" in clean_content:
+                    clean_content = clean_content.replace(f"<@{bot.user.id}>", "").strip()
+                
+                if clean_content:
+                    contents.append(clean_content)
                 
                 if message.attachments:
                     for attachment in message.attachments:
@@ -79,7 +101,7 @@ async def on_message(message):
                     await message.reply(reply_text)
         except Exception as e:
             try:
-                await message.reply(f"AI處理發生錯誤: {e}")
+                await message.reply(f"Gemini 發生錯誤: {e}")
             except:
                 pass
         return
