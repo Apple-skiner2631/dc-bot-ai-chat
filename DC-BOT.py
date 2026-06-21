@@ -1,4 +1,3 @@
-
 import os
 import threading
 from flask import Flask
@@ -11,7 +10,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Gemini Bot is running!"
+    return "Gemini AI Clean Bot is running!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
@@ -25,7 +24,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-ai_model = genai.GenerativeModel('gemini-2.5-flash')
+ai_model = genai.GenerativeModel(model_name='gemini-2.5-flash')
 
 @bot.event
 async def on_ready():
