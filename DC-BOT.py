@@ -3,13 +3,14 @@ import threading
 from flask import Flask
 import discord
 from discord.ext import commands
-from openai import OpenAI
+import google.generativeai as genai
+import httpx
 
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "DeepSeek AI Multi-Modal Bot is running!"
+    return "Gemini AI Free Bot is running!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
@@ -22,14 +23,12 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
-ai_client = OpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY"),
-    base_url="https://api.deepseek.com"
-)
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+ai_model = genai.GenerativeModel('gemini-2.5-flash')
 
 @bot.event
 async def on_ready():
-    print(f"DeepSeek 機器人已上線: {bot.user.name}")
+    print(f"Ai機器人已上線: {bot.user.name}")
 
 @bot.event
 async def on_message(message):
@@ -52,24 +51,26 @@ async def on_message(message):
 
         try:
             async with message.channel.typing():
-                content_list = [{"type": "text", "text": message.content}]
+                contents = []
+                
+                if message.content:
+                    contents.append(message.content)
                 
                 if message.attachments:
                     for attachment in message.attachments:
                         if attachment.content_type and attachment.content_type.startswith("image/"):
-                            content_list.append({
-                                "type": "image_url",
-                                "image_url": {"url": attachment.url}
-                            })
+                            async with httpx.AsyncClient() as client:
+                                response = await client.get(attachment.url)
+                                if response.status_code == 200:
+                                    contents.append({
+                                        "mime_type": attachment.content_type,
+                                        "data": response.content
+                                    })
 
-                response = ai_client.chat.completions.create(
-                    model="deepseek-chat",
-                    messages=[
-                        {"role": "user", "content": content_list}
-                    ],
-                    stream=False
-                )
-                reply_text = response.choices[0].message.content
+                if not contents: return
+
+                response = ai_model.generate_content(contents)
+                reply_text = response.text
                 
                 if len(reply_text) > 2000:
                     for i in range(0, len(reply_text), 2000):
@@ -78,7 +79,7 @@ async def on_message(message):
                     await message.reply(reply_text)
         except Exception as e:
             try:
-                await message.reply(f"DeepSeek 處理發生錯誤: {e}")
+                await message.reply(f"AI處理發生錯誤: {e}")
             except:
                 pass
         return
